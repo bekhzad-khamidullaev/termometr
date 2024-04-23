@@ -16,7 +16,7 @@ class Sensor(models.Model):
     )
     port = models.IntegerField()
     history = HistoricalRecords()
-
+    temperature = models.FloatField(null=True, blank=True)
 class SNMPSettings(models.Model):
     sensor = models.OneToOneField(Sensor, on_delete=models.CASCADE, primary_key=True)
     temp_oid = models.CharField(max_length=200)
