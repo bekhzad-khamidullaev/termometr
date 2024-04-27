@@ -2,6 +2,13 @@ from django.db import models
 from simple_history.models import HistoricalRecords
 from django.utils import timezone
 
+
+class Host(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class SNMPSettings(models.Model):
     temp_oid = models.CharField(max_length=200)
     community = models.CharField(max_length=200)
@@ -12,7 +19,7 @@ class TCPSettings(models.Model):
     port = models.IntegerField(default=0)
 
 class Sensor(models.Model):
-    hostname = models.CharField(max_length=255, unique=True)
+    hostname = models.ForeignKey(Host, on_delete=models.CASCADE, related_name='sensors')
     probe_sens_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
     PROTOCOL_CHOICES = (
         ("SNMPv2", "SNMPv2"),
@@ -21,7 +28,7 @@ class Sensor(models.Model):
     protocol = models.CharField(
         max_length=20,
         choices=PROTOCOL_CHOICES,
-        default="SNMPv2"
+        default="TCP"
     )
     temperature = models.FloatField(null=True, blank=True)
     error = models.CharField(max_length=30, null=True, blank=True)
@@ -40,4 +47,5 @@ class Sensor(models.Model):
 
 
     def __str__(self):
-        return self.hostname
+        return f"{self.hostname.name} - {self.probe_sens_id}"
+

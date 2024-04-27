@@ -2,7 +2,7 @@ import socket
 import re
 import logging
 from django.core.management.base import BaseCommand
-from sensors.models import Sensor
+from sensors.models import Sensor, Host
 
 logger = logging.getLogger(__name__)
 
@@ -12,6 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         HOST = "0.0.0.0"
         PORT = 1234
+        
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             try:
                 sock.bind((HOST, PORT))
@@ -27,16 +28,21 @@ class Command(BaseCommand):
                         lines = pattern.split(parsed_data.strip('#'))
                         lines = list(filter(lambda x: x.strip(), lines))
                         hostname = lines[0]
-                        sensor_id = lines[1]  # Rename to sensor_id for clarity
+                        sensor_id = lines[1]
                         temperature = lines[2]
                         error_code = lines[4]
                         self.stdout.write(self.style.SUCCESS(f"hostname:{hostname} sensor_id:{sensor_id} temperature:{temperature}, error_code:{error_code}"))
                         
-                        sensor, created = Sensor.objects.get_or_create(hostname=hostname)
+
+                        host, _ = Host.objects.get_or_create(name=hostname)
+                        sensor, created = Sensor.objects.get_or_create(hostname=host, probe_sens_id=sensor_id)
+                        if created:
+                            sensor = Sensor.objects.create(hostname=host, probe_sens_id=sensor_id, temperature=float(temperature), error=error_code, protocol='TCP')
+
                         sensor.temperature = float(temperature)
                         sensor.probe_sens_id = sensor_id
                         sensor.error = error_code
-                        sensor.save()  # Actually save the sensor data
+                        sensor.save()
                         
                         self.stdout.write(self.style.SUCCESS("SAVED"))
 
