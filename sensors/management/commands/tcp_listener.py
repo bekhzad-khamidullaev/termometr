@@ -1,7 +1,10 @@
 import socket
 import re
+import logging
 from django.core.management.base import BaseCommand
 from sensors.models import Sensor
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = "TCP messages listener"
@@ -10,36 +13,41 @@ class Command(BaseCommand):
         HOST = "0.0.0.0"
         PORT = 1234
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-            sock.bind((HOST, PORT))
-            sock.listen()
-            self.stdout.write(self.style.SUCCESS(f"Listening on {HOST}:{PORT}"))
+            try:
+                sock.bind((HOST, PORT))
+                sock.listen()
+                self.stdout.write(self.style.SUCCESS(f"Listening on {HOST}:{PORT}"))
 
-            while True:
-                conn, addr = sock.accept()
-                self.stdout.write(self.style.SUCCESS(f"Connection established from {addr}"))
-
-                try:
-                    parsed_data = conn.recv(1024).decode('utf-8')
-
-
-                    string_data = re.findall(r'(?s)(?<=#).*?(?=#)', parsed_data)
-                    json_data = {'device_ip': addr[0], 'device_port': addr[1], 'device_id': string_data[0]}
-                    for i in range(1, len(string_data) - 1, 2):
-                        json_data[string_data[i]] = string_data[i + 1]
-
-                    device_id = json_data['device_id'].strip()
+                while True:
+                    conn, addr = sock.accept()
+                    self.stdout.write(self.style.SUCCESS(f"Connection established from {addr}"))
                     try:
-                        sensor = Sensor.objects.get(hostname=device_id)
-                    except Sensor.DoesNotExist:
-                        self.stderr.write(self.style.ERROR(f"Sensor with hostname {device_id} does not exist. Skipping data processing."))
-                        continue
-                    
-                    temperature = float(json_data.get('T1', 0.0))
-                    sensor.temperature = temperature
-                    sensor.save()
+                        parsed_data = conn.recv(1024).decode('utf-8')
+                        pattern = re.compile(r'\n|#')
+                        lines = pattern.split(parsed_data.strip('#'))
+                        lines = list(filter(lambda x: x.strip(), lines))
+                        hostname = lines[0]
+                        sensor_id = lines[1]  # Rename to sensor_id for clarity
+                        temperature = lines[2]
+                        error_code = lines[4]
+                        self.stdout.write(self.style.SUCCESS(f"hostname:{hostname} sensor_id:{sensor_id} temperature:{temperature}, error_code:{error_code}"))
+                        
+                        sensor, created = Sensor.objects.get_or_create(hostname=hostname)
+                        sensor.temperature = float(temperature)
+                        sensor.probe_sens_id = sensor_id
+                        sensor.error = error_code
+                        sensor.save()  # Actually save the sensor data
+                        
+                        self.stdout.write(self.style.SUCCESS("SAVED"))
 
-                    self.stdout.write(self.style.SUCCESS(f"Received data from {device_id}: {json_data}"))
-                except Exception as e:
-                    self.stderr.write(self.style.ERROR(f"Error occurred: {e}"))
-                finally:
-                    conn.close()
+                    except socket.error as e:
+                        logger.error(f"Socket error occurred: {e}")
+                    except ValueError as e:
+                        logger.error(f"ValueError occurred: {e}")
+                    except Exception as e:
+                        logger.error(f"Error occurred: {e}")
+                    finally:
+                        conn.close()
+
+            except KeyboardInterrupt:
+                self.stdout.write(self.style.ERROR("Keyboard interrupt received. Exiting..."))
