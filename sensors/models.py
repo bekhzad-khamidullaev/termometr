@@ -10,8 +10,8 @@ class Host(models.Model):
         return self.name
 
 class SNMPSettings(models.Model):
-    temp_oid = models.CharField(max_length=200)
-    community = models.CharField(max_length=200)
+    temp_oid = models.CharField(max_length=40)
+    community = models.CharField(max_length=20)
     ip = models.GenericIPAddressField()
     port = models.IntegerField(default=0)
 
@@ -20,7 +20,7 @@ class TCPSettings(models.Model):
 
 class Sensor(models.Model):
     hostname = models.ForeignKey(Host, on_delete=models.CASCADE, related_name='sensors')
-    probe_sens_id = models.CharField(max_length=255, null=True, blank=True, unique=True)
+    probe_sens_id = models.CharField(max_length=20, null=True, blank=True, unique=True)
     PROTOCOL_CHOICES = (
         ("SNMPv2", "SNMPv2"),
         ("TCP", "TCP"),
@@ -36,11 +36,11 @@ class Sensor(models.Model):
     history = HistoricalRecords()
     
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)  # Call save() method of the parent class first
+        super().save(*args, **kwargs)
         if self.protocol == "SNMPv2":
             SNMPSettings.objects.get_or_create(sensor=self)
         elif self.protocol == "TCP":
-            TCPSettings.objects.get_or_create()  # Remove 'sensor=self' argument
+            TCPSettings.objects.get_or_create()
         else:
             raise ValueError("Invalid protocol specified.")
 

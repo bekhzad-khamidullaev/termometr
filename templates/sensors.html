@@ -1,0 +1,30 @@
+{% extends 'index.html' %}
+{% block content %}
+<div class="h-screen flex">
+      <div class="w-full">
+  
+        <table class="w-full text-left">
+            <thead>
+                <tr>
+                    <th class="px-4 py-2 border-r">Status</th>
+                    <th class="px-4 py-2 border-r">Hostname</th>
+                    <th class="px-4 py-2 border-r">Sensor</th>
+                    <th class="px-4 py-2">Temperature</th>
+                </tr>
+            </thead>
+            <tbody class="text-natural-600">
+                {% for sensor in sensors %}
+                <tr>                    
+                    <td class="border border-l-0 px-4 py-2 text-center {% if sensor.status %} text-green-500{% else %}text-red-500{% endif %}">{{sensor.status}}
+                        {% if sensor.status %}<i class="fad fa-circle"></i>{% else %}<i class="fa-solid fa-circle-exclamation"></i></td>{% endif %}
+                    <td class="border border-l-0 px-4 py-2">{{sensor.hostname.name}}</td>
+                    <td class="border border-l-0 px-4 py-2">{{sensor.probe_sens_id}}</td>
+                    <td class="border border-l-0 border-r-0 px-4 py-2">{{sensor.temperature}}</td>
+                </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+      </div>
+</div>
+  {% endblock %}
