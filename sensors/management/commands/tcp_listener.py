@@ -54,7 +54,8 @@ class Command(BaseCommand):
                         sensor.temperature = round(float(temperature))
                         sensor.probe_sens_id = sensor_id
                         sensor.error = error_code
-                        sensor.last_update = timezone.now()
+                        asia_tashkent_timezone = pytz.timezone('Asia/Tashkent')
+                        sensor.last_update = astimezone(asia_tashkent_timezone)
                         # @csrf_exempt
                         # def heartbeat_endpoint(self, request):
                         #     if request.method == 'POST':
@@ -63,7 +64,7 @@ class Command(BaseCommand):
                         #     else:
                         #         return HttpResponse(status=405)
                         sensor.save()
-                        self.stdout.write(self.style.SUCCESS(f"hostname:{sensor.hostname} sensor_id:{sensor.probe_sens_id} temperature:{sensor.temperature}, error_code:{sensor.error}"))
+                        self.stdout.write(self.style.SUCCESS(f"hostname:{sensor.hostname} sensor_id:{sensor.probe_sens_id} temperature:{sensor.temperature}, error_code:{sensor.error}, last_update:{sensor.last_update}"))
                         self.stdout.write(self.style.SUCCESS("SAVED"))
                     except socket.error as e:
                         logger.error(f"Socket error occurred: {e}")

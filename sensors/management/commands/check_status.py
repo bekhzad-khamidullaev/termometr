@@ -16,7 +16,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"Loop started"))
                 for sensor in sensors:
 
-                    if timezone.now() - sensor.last_update < timedelta(minutes=1):
+                    if timezone.now() - sensor.last_changes_at < timedelta(minutes=1):
                         sensor.status = True
                         self.stdout.write(self.style.SUCCESS(f"sensor: {sensor.hostname} status True"))
                     else:
