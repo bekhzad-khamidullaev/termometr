@@ -15,6 +15,7 @@ SECRET_KEY = 'django-insecure-=nb_d*^kh6()u$ny4pu64t*h1a=)4npi7nz6w^!5ij8#&-t6i^
 DEBUG = True
 
 ALLOWED_HOSTS = ["192.168.200.12"]
+TCP_LISTENER_PORT = int('1234')
 
 
 INSTALLED_APPS = [
