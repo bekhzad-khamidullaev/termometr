@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 import datetime
 from django.conf import settings
+from django.utils import timezone
 
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,6 @@ class Command(BaseCommand):
                         sensor_id = lines[1]
                         temperature = lines[2]
                         error_code = lines[4]
-                        self.stdout.write(self.style.SUCCESS(f"hostname:{hostname} sensor_id:{sensor_id} temperature:{temperature}, error_code:{error_code}"))
                         
 
                         host, _ = Host.objects.get_or_create(name=hostname)
@@ -54,7 +54,7 @@ class Command(BaseCommand):
                         sensor.temperature = round(float(temperature))
                         sensor.probe_sens_id = sensor_id
                         sensor.error = error_code
-                        sensor.last_update = datetime.datetime.now()
+                        sensor.last_update = timezone.now()
                         # @csrf_exempt
                         # def heartbeat_endpoint(self, request):
                         #     if request.method == 'POST':
@@ -63,7 +63,7 @@ class Command(BaseCommand):
                         #     else:
                         #         return HttpResponse(status=405)
                         sensor.save()
-                        call_command('check_status')
+                        self.stdout.write(self.style.SUCCESS(f"hostname:{sensor.hostname} sensor_id:{sensor.probe_sens_id} temperature:{sensor.temperature}, error_code:{sensor.error}"))
                         self.stdout.write(self.style.SUCCESS("SAVED"))
                     except socket.error as e:
                         logger.error(f"Socket error occurred: {e}")
