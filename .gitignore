@@ -8,7 +8,7 @@ venv/
 env/
 Pipfile.lock
 Pipfile
-
+front/
 # IDE (example: VSCode)
 .vscode/
 .idea/
