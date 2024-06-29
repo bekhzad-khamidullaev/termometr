@@ -1,12 +1,10 @@
 from django.contrib import admin
-from .models import Sensor, SNMPSettings, TCPSettings
+from .models import SensorData
 
 class SensorAdmin(admin.ModelAdmin):
-    model = Sensor
-    list_display = ['hostname', 'last_changes_at', 'last_update', 'status', 'probe_sens_id', 'temperature', 'error', 'protocol']
+    model = SensorData
+    list_display = ['user','sensor_id']
 
 
-admin.site.register(Sensor, SensorAdmin)
-admin.site.register(SNMPSettings)
-admin.site.register(TCPSettings)
+admin.site.register(SensorData, SensorAdmin)
 
