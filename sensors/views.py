@@ -13,6 +13,7 @@ class SensorDataView(generics.ListCreateAPIView):
     serializer_class = SensorDataSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [JWTAuthentication]
+    
 
     def perform_create(self, serializer):
         sensor_id = serializer.validated_data['sensor_id']
